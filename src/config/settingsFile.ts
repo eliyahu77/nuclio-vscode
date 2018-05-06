@@ -1,58 +1,76 @@
 'use strict';
 
 import * as path from 'path';
-import { LocalEnvironment, EnvironmentsConfig } from '../nuclio';
+import { LocalEnvironment, EnvironmentsConfig, LocalProject } from '../nuclio';
 import { writeFormattedJson } from '../utils';
-import { userConfigurationFolder, userConfigurationFileName } from '../constants';
+import { userConfigurationDir, userConfigurationFileName } from '../constants';
 const fse = require('fs-extra');
 
 // Nuclio global settings file will be saved under Home/.nuclio-vscode/nuclio.json
 // This file will contain the different Nuclio Dashboard configurations and the local projects folder mapping.
-interface ISettingsFile {
-    
+export interface ISettingsFile {
+
     // return the user home directory - compatible for different operation systems.
-    getUserHome();
+    getUserHome(): string;
 
     // gets the settings file path
-    getFolderPath();
-
-    // Create .nuclio-vscode folder on ~Home folder if not exist
-    createSettingsFolder();
+    getFolderPath(): string;
 
     // Get the full Home/.nuclio-vscode/nuclio.json file path
-    getFilePath();
+    getFilePath(): string;
 
     // Write the project configuration to nuclio.json file
-    addNewEnvironment(newEnv: LocalEnvironment);
+    addNewEnvironmentAsync(newEnv: LocalEnvironment): Promise<void>;
+
+    // Updates the settings file with a new added project
+    updateSettingsFileAsync(projectConfig: LocalProject, environmentName: string): Promise<void>;
 
     // Reads the configuration from Home/.nuclio-vscode/nuclio.json file
-    readFromFile(folderPath: string): Promise<EnvironmentsConfig>;
+    readFromFileAsync(folderPath: string): Promise<EnvironmentsConfig>;
 }
 
 export class SettingsFile implements ISettingsFile {
+    public homeDir: string;
 
-    getUserHome() {
+    constructor(dir?: string) {
+        this.homeDir = dir || this.getUserHome();
+    }
+
+    getUserHome(): string {
         return process.env.HOME || process.env.USERPROFILE || process.env.HOMEPATH;
     }
 
-    getFolderPath() {
-        return path.join(this.getUserHome(), userConfigurationFolder);
+    getFolderPath(): string {
+        return path.join(this.homeDir, userConfigurationDir);
     }
 
-    async createSettingsFolder() {
-        return await fse.ensureDir(this.getFolderPath());
-    }
-
-    getFilePath() {
+    getFilePath(): string {
         return path.join(this.getFolderPath(), userConfigurationFileName);
     }
 
-    async updateSettingsFile(data: EnvironmentsConfig){
-        await writeFormattedJson(this.getFilePath(), data);
+    async updateSettingsFileAsync(projectConfig: LocalProject, environmentName: string): Promise<void> {
+        // Write to settings file
+        let settingsData = await this.readFromFileAsync();
+        let currentEnv = settingsData.environments.find(env => env.name === environmentName);
+
+        if (currentEnv) {
+            currentEnv.projects.push({
+                name: projectConfig.name,
+                path: projectConfig.path
+            });
+
+            return await writeFormattedJson(this.getFilePath(), settingsData);
+        }
+
+        throw new Error(`Environment ${environmentName} was not found in settings file`);
+
     }
 
     // Write the environment configuration to nuclio.json file
-    async addNewEnvironment(newEnv: LocalEnvironment) {
+    async addNewEnvironmentAsync(newEnv: LocalEnvironment): Promise<void> {
+        // ensure that folder .nuclio-vscode exists
+        this.ensureSettingsFolderAsync();
+
         let data;
         let filePath = this.getFilePath();
         if (await fse.pathExists(filePath)) {
@@ -62,17 +80,20 @@ export class SettingsFile implements ISettingsFile {
             data = { environments: [newEnv] };
         }
 
-        this.updateSettingsFile(data);
+        await writeFormattedJson(this.getFilePath(), data);
     }
 
     // Reads the configuration from nuclio.json file
-    async readFromFile(): Promise<EnvironmentsConfig> {
+    async readFromFileAsync(): Promise<EnvironmentsConfig> {
         let environmentConfigPath = this.getFilePath();
         if (await fse.pathExists(this.getFilePath())) {
-            let environmentConfig = await fse.readJson(environmentConfigPath);
-            return environmentConfig;
+            return await fse.readJson(environmentConfigPath);
         }
 
         return new EnvironmentsConfig();
+    }
+
+    private async ensureSettingsFolderAsync(): Promise<void> {
+        return await fse.ensureDir(this.getFolderPath());
     }
 }

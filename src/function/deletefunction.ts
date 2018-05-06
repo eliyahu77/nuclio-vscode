@@ -1,11 +1,11 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import * as nuclio from '../nuclio';
-import { DialogResponses, writeFormattedJson } from '../utils';
+import { DialogResponses } from '../utils';
 import { FunctionTreeItem } from '../extension-tree/FunctionTreeItem';
 import * as path from 'path';
 import { ProjectFile } from '../config/projectFile';
+import { SettingsFile } from '../config/settingsFile';
 
 const fs = require('fs-extra');
 
@@ -18,9 +18,9 @@ export async function deleteLocalFunction(functionTreeItem: FunctionTreeItem) {
 
     // Remove function config from json
     // Assuming the function was in sub-folder of the project
-    let projectFile = new ProjectFile(path.join(functionTreeItem.functionConfig.path, '..'));
+    let projectFile = new ProjectFile(path.join(functionTreeItem.functionConfig.path, '..'), new SettingsFile());
 
     let projectConfigFile = projectFile.readFromFile();
     projectConfigFile.functions = projectConfigFile.functions.filter(obj => obj.name !== functionTreeItem.functionConfig.name);
-    await projectFile.writeToProjectConfig(projectConfigFile);
+    await projectFile.writeToProjectConfigAsync(projectConfigFile);
 }

@@ -22,7 +22,7 @@ export class NuclioTreeProvider implements vscode.TreeDataProvider<NuclioTreeObj
         if (typeof element === 'undefined') {
             return new Promise(async resolve => {
                 let settingsFile = new SettingsFile();
-                let settingsData = await settingsFile.readFromFile();
+                let settingsData = await settingsFile.readFromFileAsync();
                 return resolve(settingsData.environments.map(env => new EnvironmentTreeItem(env)));
             });
         }

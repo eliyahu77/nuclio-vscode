@@ -6,6 +6,8 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { selectFolder, NuclioQuickPickItem } from '../folderSelector';
 import { ProjectFile } from '../config/projectFile';
+import { SettingsFile } from '../config/settingsFile';
+import { goHandlerCode, dotNetCoreHandlerCode, nodejsHandlerCode, pythonHandlerCode, javaHandlerCode } from '../constants';
 
 const fse = require('fs-extra');
 
@@ -27,36 +29,38 @@ export async function CreateFunction(projectConfig: nuclio.LocalProject) {
         const options: vscode.QuickPickOptions = { placeHolder: 'Select the runtime' };
         const runtime = await vscode.window.showQuickPick(picks, options);
 
-        let handler: string;
+        let handler: string = 'main:Handler';
         let handlerCode: string;
         let fileExtension: string;
 
-        // TODO: fill all the missing values
         switch (runtime.data) {
             case FunctionRuntime.Go:
-                handlerCode = goHandlerCode;
                 fileExtension = '.go';
-                handler = 'main:Handler';
+                handlerCode = goHandlerCode;
                 break;
             case FunctionRuntime.NetCore:
                 fileExtension = '.cs';
+                handlerCode = dotNetCoreHandlerCode;
                 break;
             case FunctionRuntime.NodeJs:
-                handlerCode = nodejsHandlerCode;
                 fileExtension = '.js';
+                handlerCode = nodejsHandlerCode;
                 break;
             case FunctionRuntime.Python27:
             case FunctionRuntime.Python36:
+            case FunctionRuntime.PyPy:
                 handlerCode = pythonHandlerCode;
                 fileExtension = '.py';
                 break;
             case FunctionRuntime.Shell:
                 fileExtension = '.sh';
                 handlerCode = '';
+                handler = '';
                 break;
             case FunctionRuntime.Java:
-                handlerCode = '';
                 fileExtension = '.java';
+                handlerCode = javaHandlerCode;
+                handler = 'Handler';
                 break;
         }
 
@@ -87,34 +91,19 @@ export async function CreateFunction(projectConfig: nuclio.LocalProject) {
     }
 
     // Update project config with function details
-    let projectFileConfig = new ProjectFile(projectConfig.path);
+    let projectFileConfig = new ProjectFile(projectConfig.path, new SettingsFile());
     let projectData = await projectFileConfig.readFromFile();
     projectData.functions.push(new nuclio.LocalFunction(functionName, functionNamespace, functionPath));
-    projectFileConfig.writeToProjectConfig(projectData);
+    projectFileConfig.writeToProjectConfigAsync(projectData);
 }
 
 export enum FunctionRuntime {
     Go = 'golang',
     Python27 = 'python:2.7',
     Python36 = 'python:3.6',
+    PyPy = 'pypy',
     NetCore = 'dotnetcore',
     Java = 'java',
     NodeJs = 'nodejs',
     Shell = 'shell',
 }
-
-const goHandlerCode: string = `package main
-
-import (
-    "github.com/nuclio/nuclio-sdk-go"
-)
-
-func Handler(context *nuclio.Context, event nuclio.Event) (interface{}, error) {
-    return nil, nil
-}`;
-
-const pythonHandlerCode: string = `def handler(context, event):
-pass`;
-
-const nodejsHandlerCode: string = `exports.handler = function (context, event) {
-};`;

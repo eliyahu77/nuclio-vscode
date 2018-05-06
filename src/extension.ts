@@ -23,12 +23,12 @@ export async function activate(context: vscode.ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension \'nuclio\' is now active!');
-
+    context.subscriptions.push(channel);
     channel.show();
 
     let nuclioTreeProvider = new NuclioTreeProvider();
     vscode.window.registerTreeDataProvider('nuclioTreeProvider', nuclioTreeProvider);
-
+    
     vscode.commands.registerCommand('nuclioTreeProvider.refresh', () => nuclioTreeProvider.refresh());
     vscode.commands.registerCommand('nuclioTreeProvider.deployFunction', async (func) => {
         await deploy(func);

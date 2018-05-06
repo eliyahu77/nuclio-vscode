@@ -1,7 +1,7 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { ProjectConfig, Dashboard, LocalEnvironment, LocalProject, LocalFunction } from '../nuclio';
+import { Dashboard, LocalEnvironment, LocalProject, LocalFunction } from '../nuclio';
 import { NuclioTreeBase, NuclioTreeObject } from './NuclioTreeItem';
 import { FunctionTreeItem } from './FunctionTreeItem';
 import { ContextValues } from '../constants';

@@ -15,9 +15,6 @@ limitations under the License.
 */
 
 import axios from 'axios';
-import { isEmpty } from './utils';
-import * as path from 'path';
-const fs = require('fs-extra');
 
 export interface IPlatform {
 
@@ -31,7 +28,7 @@ export interface IPlatform {
     deleteProject(id: IResourceIdentifier);
 
     // create a single function given a configuration
-    createFunction(projectName: string, functionConfig: FunctionConfig): Promise<FunctionConfig>;
+    createFunction(projectName: string, functionConfig: FunctionConfig): Promise<FunctionConfig | void>;
 
     // invoke a function
     invokeFunction(id: IResourceIdentifier, options: IInvokeOptions): Promise<InvokeResult>;
@@ -229,7 +226,7 @@ export class Dashboard implements IPlatform {
         return this.deleteResource(id, 'project', ProjectConfig);
     }
 
-    async createFunction(projectName: string, functionConfig: FunctionConfig): Promise<FunctionConfig> {
+    async createFunction(projectName: string, functionConfig: FunctionConfig): Promise<FunctionConfig | void> {
 
         // create labels if not created and set the project name label
         functionConfig.metadata.labels = functionConfig.metadata.labels ? functionConfig.metadata.labels : {};
@@ -238,7 +235,7 @@ export class Dashboard implements IPlatform {
         const body = JSON.stringify(functionConfig);
 
         // create function by posting function config
-        const response = await axios.post(this.url + '/api/functions', body);
+        await axios.post(this.url + '/api/functions', body);
 
         const retryIntervalMs = 1000;
         const maxRetries = 60;

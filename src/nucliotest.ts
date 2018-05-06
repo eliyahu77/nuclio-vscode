@@ -55,6 +55,9 @@ class Test {
 
         // create the function. will return once the function is ready
         const createdFunction = await dashboard.createFunction(projectConfig.metadata.name, functionConfig);
+        if (!createdFunction) {
+            throw new Error('function was not created successfully');
+        }
         console.log('Deployed successfully @ ' + createdFunction.status.httpPort);
 
         // get all functions

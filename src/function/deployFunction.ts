@@ -4,14 +4,9 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { channel } from '../extension';
 import { FunctionTreeItem } from '../extension-tree/FunctionTreeItem';
-import { FunctionConfig } from '../nuclio';
 
+const base64 = require('base-64');
 const fs = require('fs-extra');
-const Buffer = require('buffer').Buffer;
-
-// TODO: Find a better way to handle encode/decode
-const btoa = function (str) { return Buffer.from(str).toString('base64'); };
-const atob = function (b64Encoded) { return Buffer.from(b64Encoded, 'base64').toString('binary'); };
 
 export async function deploy(functionTreeItem: FunctionTreeItem): Promise<void> {
     let configFile;
@@ -28,7 +23,7 @@ export async function deploy(functionTreeItem: FunctionTreeItem): Promise<void> 
                 configFile = fs.readJsonSync(path.join(functionTreeItem.functionConfig.path, file));
                 break;
             default:
-                codeFile = btoa(fs.readFileSync(path.join(functionTreeItem.functionConfig.path, file), 'utf8'));
+                codeFile = base64.encode(fs.readFileSync(path.join(functionTreeItem.functionConfig.path, file), 'utf8'));
         }
     });
 
@@ -41,6 +36,6 @@ export async function deploy(functionTreeItem: FunctionTreeItem): Promise<void> 
     channel.appendLine('Function deployed successfully');
 }
 
-function getExtension(filename) {
+function getExtension(filename: string) {
     return filename.split('.').pop();
 }

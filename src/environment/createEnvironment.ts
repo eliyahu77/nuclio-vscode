@@ -8,9 +8,6 @@ export async function createEnvironment(): Promise<void> {
 
     let settingsFile = new SettingsFile();
 
-    // Create .nuclio-vscode on the user's home if not exist
-    settingsFile.createSettingsFolder();
-
     // Get environment details
     let name = await vscode.window.showInputBox({ prompt: 'Enter the new environment name' });
     let namespace = await vscode.window.showInputBox({ prompt: 'Enter the new environment namespace' });
@@ -22,5 +19,5 @@ export async function createEnvironment(): Promise<void> {
 
     const newEnv = new LocalEnvironment(name, namespace, address, []);
 
-    settingsFile.addNewEnvironment(newEnv);
+    settingsFile.addNewEnvironmentAsync(newEnv);
 }

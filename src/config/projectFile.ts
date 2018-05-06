@@ -1,9 +1,9 @@
 'use strict';
 
 import * as path from 'path';
-import { ProjectConfig, LocalProject } from '../nuclio';
+import { LocalProject } from '../nuclio';
 import { confirmEditJsonFile } from '../utils';
-import { SettingsFile } from './settingsFile';
+import { ISettingsFile } from './settingsFile';
 
 const fse = require('fs-extra');
 
@@ -12,19 +12,16 @@ const fse = require('fs-extra');
 // This file will contain the project's configurations and the local function under this project.
 export interface IProjectFile {
     // Returns the project config folder path (example: project-folder/.vscode) 
-    getFolderPath();
+    getFolderPath(): string;
 
     // Returns the project config file path (example: project-folder/.vscode/nuclio.json) 
-    getFilePath();
-
-    // Creates the config folder
-    createConfigFolder();
+    getFilePath(): string;
 
     // Write the project configuration to project file
-    writeToProjectConfig(projectConfig: LocalProject);
+    writeToProjectConfigAsync(projectConfig: LocalProject): Promise<void>;
 
     // Write the project configuration to settings file
-    writeToSettingsConfig(projectConfig: LocalProject, environmentName: string);
+    writeToSettingsConfigAsync(projectConfig: LocalProject, environmentName: string): Promise<void>;
 
     // Reads the configuration from nuclio.json file
     readFromFile(): LocalProject;
@@ -32,22 +29,21 @@ export interface IProjectFile {
 
 export class ProjectFile implements IProjectFile {
 
-    constructor(private folderPath: string) {
+    constructor(private folderPath: string, private settingsFile: ISettingsFile) {
     }
 
-    async createConfigFolder() {
-        return await fse.ensureDir(this.getFolderPath());
-    }
-
-    getFolderPath() {
+    getFolderPath(): string {
         return path.join(this.folderPath, '.vscode');
     }
 
-    getFilePath() {
+    getFilePath(): string {
         return path.join(this.getFolderPath(), 'nuclio.json');
     }
 
-    async writeToProjectConfig(projectConfig: LocalProject) {
+    async writeToProjectConfigAsync(projectConfig: LocalProject): Promise<void> {
+        // ensure that the folder .vscode exists
+        await this.ensureConfigFolderAsync();
+
         // Write to project config
         const settingsJsonPath: string = this.getFilePath();
         await confirmEditJsonFile(
@@ -64,21 +60,20 @@ export class ProjectFile implements IProjectFile {
         );
     }
 
-    async writeToSettingsConfig(projectConfig: LocalProject, environmentName: string) {
-        // Write to settings file
-        let settingsFile = new SettingsFile();
-        let settingsData = await settingsFile.readFromFile();
-
-        settingsData.environments.find(env => env.name === environmentName).projects.push({
-            name: projectConfig.name,
-            path: this.folderPath
-        });
-
-        await settingsFile.updateSettingsFile(settingsData);
+    async writeToSettingsConfigAsync(projectConfig: LocalProject, environmentName: string) : Promise<void>{
+        await this.settingsFile.updateSettingsFileAsync(projectConfig, environmentName);
     }
 
     readFromFile(): LocalProject {
-        let projectConfigFile = fse.readJsonSync(this.getFilePath(), 'utf8');
-        return new LocalProject(projectConfigFile.name, projectConfigFile.displayName, this.folderPath, projectConfigFile.functions);
+        try {
+            let projectConfigFile = fse.readJsonSync(this.getFilePath(), 'utf8');
+            return new LocalProject(projectConfigFile.name, projectConfigFile.displayName, this.folderPath, projectConfigFile.functions);
+        } catch (e) {
+            throw new Error(`Error reading file ${this.getFilePath()}: ${e}`);
+        }
+    }
+
+    private async ensureConfigFolderAsync() : Promise<void> {
+        return await fse.ensureDir(this.getFolderPath());
     }
 }

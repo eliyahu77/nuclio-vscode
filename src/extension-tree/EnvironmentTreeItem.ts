@@ -7,16 +7,22 @@ import { ContextValues } from '../constants';
 import { ProjectTreeItem } from './ProjectTreeItem';
 import { isEmpty } from '../utils';
 import { ProjectFile } from '../config/projectFile';
+import { SettingsFile } from '../config/settingsFile';
 
 export class EnvironmentTreeItem extends NuclioTreeBase {
 
     getChildren(): vscode.ProviderResult<NuclioTreeObject[]> {
-        return new Promise(async resolve => {
-            let projects = await this.getProjectsFromConfig(this.environmentConfig);
-            if (!isEmpty(projects)) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let projects = await this.getProjectsFromConfig(this.environmentConfig);
+                if (isEmpty(projects)) {
+                    return resolve([]);
+                }
                 return resolve(projects.map(project => new ProjectTreeItem(project, this.environmentConfig)));
             }
-            return resolve([]);
+            catch (e) {
+                reject(e);
+            }
         });
     }
 
@@ -32,7 +38,7 @@ export class EnvironmentTreeItem extends NuclioTreeBase {
         }
 
         return environmentConfig.projects.map(project => {
-            let projectFileConfig = new ProjectFile(project.path);
+            let projectFileConfig = new ProjectFile(project.path, new SettingsFile());
             return projectFileConfig.readFromFile();
         });
     }

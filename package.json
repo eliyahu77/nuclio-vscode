@@ -128,7 +128,7 @@
     },
     "dependencies": {
         "axios": "^0.18.0",
-        "buffer": "^5.1.0",
+        "base-64": "^0.1.0",
         "fs-extra": "^5.0.0"
     }
 }
