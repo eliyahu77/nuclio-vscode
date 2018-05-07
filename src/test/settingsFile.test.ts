@@ -5,59 +5,57 @@
 
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import { SettingsFile } from '../config/settingsFile';
-import { LocalProject, LocalEnvironment } from '../nuclio';
+import { EnvironmentsConfig, LocalEnvironment, LocalProject } from '../nuclio';
 
-const fs = require('fs-extra');
+suite('SettingsFile Tests', function (): void {
+    const folderPath: string = 'C:\\temp2';
 
-suite('SettingsFile Tests', function () {
-    const folderPath = 'C:\\temp2';
-
-    test('Default folder path is set correctly', function () {
+    test('Default folder path is set correctly', function (): void {
         testCleanup();
-        let settingsFile = new SettingsFile();
+        const settingsFile: SettingsFile = new SettingsFile();
 
         assert.equal(settingsFile.getUserHome(), settingsFile.homeDir);
     });
 
-    test('Settings config is correctly generated and updated', async function () {
+    test('Settings config is correctly generated and updated', async function (): Promise<void> {
         testCleanup();
 
-        let settingsFile = new SettingsFile(folderPath);
+        const settingsFile: SettingsFile = new SettingsFile(folderPath);
 
-        const name = 'env';
-        const namespace = 'nuclio';
-        const address = 'http://127.0.0.1:8000';
+        const name: string = 'env';
+        const namespace: string = 'nuclio';
+        const address: string = 'http://127.0.0.1:8000';
 
-        let localEnvironment = new LocalEnvironment(name, namespace, address, []);
+        const localEnvironment: LocalEnvironment = new LocalEnvironment(name, namespace, address, []);
 
         await settingsFile.addNewEnvironmentAsync(localEnvironment);
-        let storedSettings = await settingsFile.readFromFileAsync();
+        let storedSettings: EnvironmentsConfig = await settingsFile.readFromFileAsync();
 
         assert.equal(storedSettings.environments.length, 1);
 
-        let storedEnv = storedSettings.environments.filter(env => env.name === name)[0];
+        let storedEnv: LocalEnvironment = storedSettings.environments.filter((env: LocalEnvironment) => env.name === name)[0];
 
         assert.deepEqual(storedEnv, localEnvironment);
 
         // Add new project to env
-        const projectName = 'newproj';
-        const displayName = 'new proj';
-        const projectFolderPath = 'C:\\projectFolder';
-        let projectConfig = new LocalProject(projectName, displayName, projectFolderPath, []);
+        const projectName: string = 'newproj';
+        const displayName: string = 'new proj';
+        const projectFolderPath: string = 'C:\\projectFolder';
+        const projectConfig: LocalProject = new LocalProject(projectName, displayName, projectFolderPath, []);
         localEnvironment.projects.push({ name: projectConfig.name, path: projectConfig.path });
 
         await settingsFile.updateSettingsFileAsync(projectConfig, name);
         storedSettings = await settingsFile.readFromFileAsync();
 
-        storedEnv = storedSettings.environments.filter(env => env.name === name)[0];
+        storedEnv = storedSettings.environments.filter((env: LocalEnvironment) => env.name === name)[0];
 
         assert.deepEqual(storedEnv, localEnvironment);
     });
 
-    function testCleanup() {
-        fs.removeSync(path.join(folderPath, '.nuclio-vscode'));
+    function testCleanup(): void {
+        fse.removeSync(path.join(folderPath, '.nuclio-vscode'));
     }
 });
-

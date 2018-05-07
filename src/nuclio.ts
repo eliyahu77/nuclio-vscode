@@ -25,7 +25,7 @@ export interface IPlatform {
     getProjects(filter: IProjectFilter): Promise<ProjectConfig[]>;
 
     // delete a project
-    deleteProject(id: IResourceIdentifier);
+    deleteProject(id: IResourceIdentifier): Promise<void>;
 
     // create a single function given a configuration
     createFunction(projectName: string, functionConfig: FunctionConfig): Promise<FunctionConfig | void>;
@@ -37,7 +37,7 @@ export interface IPlatform {
     getFunctions(filter: IFunctionFilter): Promise<FunctionConfig[]>;
 
     // delete a function
-    deleteFunction(id: IResourceIdentifier);
+    deleteFunction(id: IResourceIdentifier): Promise<void>;
 }
 
 export class EnvironmentsConfig {
@@ -109,6 +109,7 @@ export interface IResourceIdentifier {
     name?: string;
 }
 
+// tslint:disable-next-line:no-empty-interface
 export interface IProjectFilter extends IResourceIdentifier { }
 
 export interface IFunctionFilter extends IResourceIdentifier {
@@ -164,7 +165,7 @@ export class FunctionSpec {
     description: string;
     disabled: boolean;
     handler: string;
-    runtime; string;
+    runtime: string;
     env: Env[];
     image: string;
     imageHash: string;
@@ -209,10 +210,10 @@ export class Dashboard implements IPlatform {
 
     // create a single project given a configuration
     async createProject(projectConfig: ProjectConfig): Promise<ProjectConfig> {
-        const body = JSON.stringify(projectConfig);
+        const body: string = JSON.stringify(projectConfig);
 
         // create function by posting function config
-        let result = await axios.post(this.url + '/api/projects', body);
+        const result: any = await axios.post(`${this.url}/api/projects`, body);
         return result.data;
     }
 
@@ -222,7 +223,7 @@ export class Dashboard implements IPlatform {
     }
 
     // delete a project
-    async deleteProject(id: IResourceIdentifier) {
+    async deleteProject(id: IResourceIdentifier): Promise<void> {
         return this.deleteResource(id, 'project', ProjectConfig);
     }
 
@@ -232,17 +233,17 @@ export class Dashboard implements IPlatform {
         functionConfig.metadata.labels = functionConfig.metadata.labels ? functionConfig.metadata.labels : {};
         functionConfig.metadata.labels['nuclio.io/project-name'] = projectName;
 
-        const body = JSON.stringify(functionConfig);
+        const body: string = JSON.stringify(functionConfig);
 
         // create function by posting function config
-        await axios.post(this.url + '/api/functions', body);
+        await axios.post(`${this.url}/api/functions`, body);
 
-        const retryIntervalMs = 1000;
-        const maxRetries = 60;
+        const retryIntervalMs: number = 1000;
+        const maxRetries: number = 60;
 
-        // poll for retryIntervalMs * maxRetries. the function is being created and we need for it 
+        // poll for retryIntervalMs * maxRetries. the function is being created and we need for it
         // to become ready or to fail
-        for (let retryIdx = 0; retryIdx < maxRetries; retryIdx++) {
+        for (let retryIdx: number = 0; retryIdx < maxRetries; retryIdx++) {
             let createdFunctionConfig: FunctionConfig[];
 
             try {
@@ -266,12 +267,12 @@ export class Dashboard implements IPlatform {
 
                 // if the function is in error state, explode
                 if (createdFunctionConfig[0].status.state === 'error') {
-                    throw new Error('Creation failed: ' + createdFunctionConfig[0].status.message);
+                    throw new Error(`Creation failed: ${createdFunctionConfig[0].status.message}`);
                 }
             }
 
             // wait a bit
-            await new Promise(resolve => setTimeout(resolve, retryIntervalMs));
+            await new Promise((resolve: any): number => setTimeout(resolve, retryIntervalMs));
         }
     }
 
@@ -283,7 +284,7 @@ export class Dashboard implements IPlatform {
         }
 
         // get headers from options or create a new object
-        const headers = options.headers ? options.headers : {};
+        const headers: { [key: string]: any } = options.headers ? options.headers : {};
         headers['x-nuclio-function-name'] = id.name;
         headers['x-nuclio-function-namespace'] = id.namespace;
         headers['x-nuclio-invoke-via'] = options.via ? options.via : 'external-ip';
@@ -293,8 +294,8 @@ export class Dashboard implements IPlatform {
         }
 
         let response: any;
-        const url = this.url + '/api/function_invocations';
-        const axiosMethod = axios[options.method];
+        const url: string = `${this.url}/api/function_invocations`;
+        const axiosMethod: any = axios[options.method];
 
         // invoke the function by calling the appropriate method on function_invocations
         if (['post', 'put', 'path'].includes(options.method)) {
@@ -303,7 +304,7 @@ export class Dashboard implements IPlatform {
             response = await axiosMethod(url, { headers: headers });
         }
 
-        const invokeResult = new InvokeResult();
+        const invokeResult: InvokeResult = new InvokeResult();
         invokeResult.statusCode = response.status;
         invokeResult.headers = response.headers;
         invokeResult.body = response.data;
@@ -313,7 +314,7 @@ export class Dashboard implements IPlatform {
 
     // get a set of functions matching a filter
     async getFunctions(filter: IFunctionFilter): Promise<FunctionConfig[]> {
-        let headers = {};
+        const headers: {} = {};
 
         // set project name filter
         if (filter.projectName !== undefined) {
@@ -324,7 +325,7 @@ export class Dashboard implements IPlatform {
     }
 
     // delete functions
-    async deleteFunction(id: IFunctionFilter) {
+    async deleteFunction(id: IFunctionFilter): Promise<void> {
         return this.deleteResource(id, 'function', FunctionConfig);
     }
 
@@ -333,35 +334,35 @@ export class Dashboard implements IPlatform {
 
         // headers will filter namespace
         headers = headers ? headers : {};
-        headers['x-nuclio-' + resourceName + '-namespace'] = filter.namespace;
+        headers[`x-nuclio-${resourceName}-namespace`] = filter.namespace;
 
         // url is resource name (plural)
-        let path = '/api/' + resourceName + 's';
+        let path: string = `/api/${resourceName}s`;
 
         if (filter.name !== undefined) {
-            path += '/' + filter.name;
+            path += `/${filter.name}`;
         }
 
-        const resources = [];
-        let responseResources = {};
+        const resources: any[] = [];
+        let responseResources: {} = {};
 
         // get functions, filtered by the filter
-        const response = await axios.get(this.url + path, { headers: headers });
+        const response: any = await axios.get(this.url + path, { headers: headers });
 
         // if name was passed, we get a single entity. wrap it in an array to normalize it
         if (filter.name !== undefined) {
+            // tslint:disable-next-line:no-string-literal
             responseResources['single'] = response.data;
         } else {
             responseResources = response.data;
         }
 
         // iterate over response which is {resourceName: resourceConfig} and create the appropriate object
-        for (const resourceName in responseResources) {
-            const resource = new resourceClass();
+        for (const name of Object.keys(responseResources)) {
+            const resource: any = new resourceClass();
 
             // assign the object
-            Object.assign(resource, responseResources[resourceName]);
-
+            Object.assign(resource, responseResources[name]);
             resources.push(resource);
         }
 
@@ -369,18 +370,18 @@ export class Dashboard implements IPlatform {
     }
 
     // delete functions
-    async deleteResource(id: IResourceIdentifier, resourceName: string, resourceClass: any) {
+    async deleteResource(id: IResourceIdentifier, resourceName: string, resourceClass: any): Promise<void> {
 
         // name must be passed
         if (id.name === undefined) {
             throw new Error('Resource name must be specified in delete');
         }
 
-        const resource = new resourceClass();
+        const resource: any = new resourceClass();
         resource.metadata.name = id.name;
         resource.metadata.namespace = id.namespace;
 
         // delete the function
-        await axios.delete(this.url + '/api/' + resourceName + 's', { data: JSON.stringify(resource) });
+        await axios.delete(`${this.url}/api/${resourceName}s`, { data: JSON.stringify(resource) });
     }
 }

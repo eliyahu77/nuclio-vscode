@@ -5,49 +5,48 @@
 
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import { ProjectFile } from '../config/projectFile';
-import { userConfigurationFileName } from '../constants';
-import { LocalProject, LocalFunction } from '../nuclio';
 import { SettingsFile } from '../config/settingsFile';
-
-const fs = require('fs-extra');
+import { userConfigurationFileName } from '../constants';
+import { LocalFunction, LocalProject } from '../nuclio';
 
 // Defines a Mocha test suite to group tests of similar kind together
-suite('ProjectFile Tests', function () {
-    const folderPath = 'C:\\temp2';
-    let settingsFile = new SettingsFile('C\\temp3');
+suite('ProjectFile Tests', function (): void {
+    const folderPath: string = 'C:\\temp2';
+    const settingsFile: SettingsFile = new SettingsFile('C\\temp3');
     // Defines a Mocha unit test
-    test('Get methods return correct value', function() {
+    test('Get methods return correct value', function (): void {
         testCleanup();
 
-        let projectFile = new ProjectFile(folderPath, settingsFile);
+        const projectFile: ProjectFile = new ProjectFile(folderPath, settingsFile);
 
         assert.equal(projectFile.getFolderPath(), path.join(folderPath, '.vscode'));
         assert.equal(projectFile.getFilePath(), path.join(folderPath, '.vscode', userConfigurationFileName));
     });
 
-    test('Project config is correctly generated and updated', async function() {
+    test('Project config is correctly generated and updated', async function (): Promise<void> {
         testCleanup();
 
-        let projectFile = new ProjectFile(folderPath, settingsFile);
-        const name = 'newproj';
-        const displayName =  'new proj';
-        let projectConfig = new LocalProject(name, displayName, folderPath, []);
+        const projectFile: ProjectFile = new ProjectFile(folderPath, settingsFile);
+        const name: string = 'newproj';
+        const displayName: string = 'new proj';
+        const projectConfig: LocalProject = new LocalProject(name, displayName, folderPath, []);
 
         await projectFile.writeToProjectConfigAsync(projectConfig);
 
-        let projectData = projectFile.readFromFile();
+        let projectData: LocalProject = projectFile.readFromFile();
 
         assert.deepEqual(projectConfig, projectData);
-        
+
         // Add new function to project
-        const funcName = 'My func';
-        const namespace = 'nuclio';
-        const funcPath = path.join(folderPath, 'newfunc');
+        const funcName: string = 'My func';
+        const namespace: string = 'nuclio';
+        const funcPath: string = path.join(folderPath, 'newfunc');
 
         // update file
-        let functionConfig = new LocalFunction(funcName, namespace, funcPath);
+        const functionConfig: LocalFunction = new LocalFunction(funcName, namespace, funcPath);
         projectConfig.functions.push(functionConfig);
 
         // update settings
@@ -59,8 +58,7 @@ suite('ProjectFile Tests', function () {
 
     });
 
-    function testCleanup() {
-        fs.removeSync(path.join(folderPath, '.vscode'));
+    function testCleanup(): void {
+        fse.removeSync(path.join(folderPath, '.vscode'));
     }
 });
-

@@ -1,17 +1,17 @@
-import * as vscode from 'vscode';
 import * as path from 'path';
+import * as vscode from 'vscode';
 
-export interface NuclioTreeObject extends vscode.TreeItem {
+export interface INuclioTreeObject extends vscode.TreeItem {
     readonly id: string;
     readonly contextValue: string;
 
-    getChildren(): vscode.ProviderResult<NuclioTreeObject[]>;
+    getChildren(): vscode.ProviderResult<INuclioTreeObject[]>;
     getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem>;
     getIconPath(): string;
 
 }
 
-export class NuclioTreeBase implements NuclioTreeObject {
+export class NuclioTreeBase implements INuclioTreeObject {
     id: string;
     contextValue: string;
     collapsibleState: vscode.TreeItemCollapsibleState;
@@ -22,12 +22,12 @@ export class NuclioTreeBase implements NuclioTreeObject {
         this.collapsibleState = collapsibleState;
     }
 
-    getChildren(): vscode.ProviderResult<NuclioTreeObject[]> {
+    getChildren(): vscode.ProviderResult<INuclioTreeObject[]> {
         throw new Error('Base Class: Method not implemented.');
     }
 
     getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-        let treeItem: vscode.TreeItem = {
+        const treeItem: vscode.TreeItem = {
             label: this.id,
             collapsibleState: this.collapsibleState,
             iconPath: this.getIconPath(),

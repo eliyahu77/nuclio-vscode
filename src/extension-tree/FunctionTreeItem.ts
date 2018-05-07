@@ -1,23 +1,21 @@
-'use strict';
-
 import * as vscode from 'vscode';
-import { Dashboard, LocalFunction } from '../nuclio';
-import { NuclioTreeBase, NuclioTreeObject } from './NuclioTreeItem';
 import { ContextValues } from '../constants';
+import { Dashboard, LocalFunction } from '../nuclio';
+import { INuclioTreeObject, NuclioTreeBase } from './NuclioTreeItem';
 
 export class FunctionTreeItem extends NuclioTreeBase {
 
-	// function have no children in tree view.
-	getChildren(): vscode.ProviderResult<NuclioTreeObject[]> {
-		return null;
-	}
+    constructor(
+        public readonly functionConfig: LocalFunction,
+        public readonly dashboard: Dashboard,
+        public readonly projectName: string
+    ) {
+        super(functionConfig.name, ContextValues.function, vscode.TreeItemCollapsibleState.None);
+        this.functionConfig = functionConfig;
+    }
 
-	constructor(
-		public readonly functionConfig: LocalFunction,
-		public readonly dashboard: Dashboard,
-		public readonly projectName: string
-	) {
-		super(functionConfig.name, ContextValues.function, vscode.TreeItemCollapsibleState.None);
-		this.functionConfig = functionConfig;
-	}
+    // function have no children in tree view.
+    getChildren(): vscode.ProviderResult<INuclioTreeObject[]> {
+        return null;
+    }
 }

@@ -1,10 +1,10 @@
 'use strict';
 
+import * as fse from 'fs-extra';
 import * as path from 'path';
-import { LocalEnvironment, EnvironmentsConfig, LocalProject } from '../nuclio';
-import { writeFormattedJson } from '../utils';
 import { userConfigurationDir, userConfigurationFileName } from '../constants';
-const fse = require('fs-extra');
+import { EnvironmentsConfig, LocalEnvironment, LocalProject } from '../nuclio';
+import { writeFormattedJson } from '../utils';
 
 // Nuclio global settings file will be saved under Home/.nuclio-vscode/nuclio.json
 // This file will contain the different Nuclio Dashboard configurations and the local projects folder mapping.
@@ -36,22 +36,22 @@ export class SettingsFile implements ISettingsFile {
         this.homeDir = dir || this.getUserHome();
     }
 
-    getUserHome(): string {
+    public getUserHome(): string {
         return process.env.HOME || process.env.USERPROFILE || process.env.HOMEPATH;
     }
 
-    getFolderPath(): string {
+    public getFolderPath(): string {
         return path.join(this.homeDir, userConfigurationDir);
     }
 
-    getFilePath(): string {
+    public getFilePath(): string {
         return path.join(this.getFolderPath(), userConfigurationFileName);
     }
 
-    async updateSettingsFileAsync(projectConfig: LocalProject, environmentName: string): Promise<void> {
+    public async updateSettingsFileAsync(projectConfig: LocalProject, environmentName: string): Promise<void> {
         // Write to settings file
-        let settingsData = await this.readFromFileAsync();
-        let currentEnv = settingsData.environments.find(env => env.name === environmentName);
+        const settingsData: EnvironmentsConfig = await this.readFromFileAsync();
+        const currentEnv: LocalEnvironment = settingsData.environments.find((env: LocalEnvironment) => env.name === environmentName);
 
         if (currentEnv) {
             currentEnv.projects.push({
@@ -67,12 +67,12 @@ export class SettingsFile implements ISettingsFile {
     }
 
     // Write the environment configuration to nuclio.json file
-    async addNewEnvironmentAsync(newEnv: LocalEnvironment): Promise<void> {
+    public async addNewEnvironmentAsync(newEnv: LocalEnvironment): Promise<void> {
         // ensure that folder .nuclio-vscode exists
         this.ensureSettingsFolderAsync();
 
-        let data;
-        let filePath = this.getFilePath();
+        let data: EnvironmentsConfig;
+        const filePath: string = this.getFilePath();
         if (await fse.pathExists(filePath)) {
             data = await fse.readJson(filePath);
             data.environments.push(newEnv);
@@ -84,8 +84,8 @@ export class SettingsFile implements ISettingsFile {
     }
 
     // Reads the configuration from nuclio.json file
-    async readFromFileAsync(): Promise<EnvironmentsConfig> {
-        let environmentConfigPath = this.getFilePath();
+    public async readFromFileAsync(): Promise<EnvironmentsConfig> {
+        const environmentConfigPath: string = this.getFilePath();
         if (await fse.pathExists(this.getFilePath())) {
             return await fse.readJson(environmentConfigPath);
         }

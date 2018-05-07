@@ -41,10 +41,6 @@
                 "title": "Create function"
             },
             {
-                "command": "nuclioTreeProvider.deleteProject",
-                "title": "Delete project"
-            },
-            {
                 "command": "nuclioTreeProvider.refresh",
                 "title": "Refresh",
                 "icon": {
@@ -100,11 +96,6 @@
                     "group": "1@1"
                 },
                 {
-                    "command": "nuclioTreeProvider.deleteProject",
-                    "when": "view == nuclioTreeProvider && viewItem == project",
-                    "group": "2@1"
-                },
-                {
                     "command": "nuclioTreeProvider.createProject",
                     "when": "view == nuclioTreeProvider && viewItem == environment",
                     "group": "navigation"
@@ -127,6 +118,8 @@
         "@types/mocha": "^2.2.42"
     },
     "dependencies": {
+        "@types/base-64": "^0.1.2",
+        "@types/fs-extra": "^5.0.2",
         "axios": "^0.18.0",
         "base-64": "^0.1.0",
         "fs-extra": "^5.0.0"

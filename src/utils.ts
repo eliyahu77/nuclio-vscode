@@ -14,7 +14,7 @@ export async function writeFormattedJson(fsPath: string, data: object): Promise<
     await fse.writeJson(fsPath, data, { spaces: 2 });
 }
 
-export async function confirmEditJsonFile(fsPath: string, editJson: (existingData: {}) => {}): Promise<void> {
+export async function confirmEditJsonFile(fsPath: string, editJson: (existingData: any) => {}): Promise<void> {
     let newData: {};
     if (await fse.pathExists(fsPath)) {
         try {
@@ -36,7 +36,7 @@ export async function confirmEditJsonFile(fsPath: string, editJson: (existingDat
 
 export async function confirmOverwriteFile(fsPath: string): Promise<boolean> {
     if (await fse.pathExists(fsPath)) {
-        const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage('File' + fsPath + ' already exists. Overwrite?', DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
+        const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(`File ${fsPath} already exists. Overwrite?`, DialogResponses.yes, DialogResponses.no, DialogResponses.cancel);
         return result === DialogResponses.yes;
     } else {
         return true;

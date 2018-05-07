@@ -1,33 +1,33 @@
 'use strict';
 
-import * as nuclio from '../nuclio';
 import * as vscode from 'vscode';
-import { selectFolder } from '../folderSelector';
 import { ProjectFile } from '../config/projectFile';
 import { SettingsFile } from '../config/settingsFile';
+import { selectFolder } from '../folderSelector';
+import { Dashboard, LocalEnvironment, LocalProject, ProjectConfig } from '../nuclio';
 
-export async function CreateProject(environmentConfig: nuclio.LocalEnvironment) {
-    let dashboard = new nuclio.Dashboard(environmentConfig.address);
+export async function CreateProject(environmentConfig: LocalEnvironment): Promise<void> {
+    const dashboard: Dashboard = new Dashboard(environmentConfig.address);
 
-    let displayName = await vscode.window.showInputBox({ prompt: 'Enter the project\'s name' });
-    let namespace = await vscode.window.showInputBox({ prompt: 'Enter the new project namespace' });
-    let description = await vscode.window.showInputBox({ prompt: 'Enter the project\'s description' });
-    let filePath = await selectFolder('Select the folder for the project');
+    const displayName: string = await vscode.window.showInputBox({ prompt: 'Enter the project\'s name' });
+    const namespace: string = await vscode.window.showInputBox({ prompt: 'Enter the new project namespace' });
+    const description: string = await vscode.window.showInputBox({ prompt: 'Enter the project\'s description' });
+    const filePath: string = await selectFolder('Select the folder for the project');
 
-    let projectConfig = new nuclio.ProjectConfig();
+    let projectConfig: ProjectConfig = new ProjectConfig();
     projectConfig.metadata.namespace = namespace;
     projectConfig.spec.description = description;
     projectConfig.spec.displayName = displayName;
 
-    let settingsFile = new SettingsFile();
-    let projectFileConfig = new ProjectFile(filePath, settingsFile);
+    const settingsFile: SettingsFile = new SettingsFile();
+    const projectFileConfig: ProjectFile = new ProjectFile(filePath, settingsFile);
 
     // Create the project in nuclio
-    let remoteProjConfig = await dashboard.createProject(projectConfig);
+    projectConfig = await dashboard.createProject(projectConfig);
 
     vscode.window.showInformationMessage('Project created successfully');
 
-    let projectInEnvironment = new nuclio.LocalProject(remoteProjConfig.metadata.name, displayName, filePath, []);
+    const projectInEnvironment: LocalProject = new LocalProject(projectConfig.metadata.name, displayName, filePath, []);
     await projectFileConfig.writeToProjectConfigAsync(projectInEnvironment);
 
     // Update the settings file with the new added environment

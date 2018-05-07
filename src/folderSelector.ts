@@ -1,13 +1,13 @@
 'use strict';
 
-import { window, QuickPickItem, workspace, WorkspaceFolder, WorkspaceConfiguration, Uri } from 'vscode';
 import * as path from 'path';
+import { QuickPickItem, Uri, window, workspace, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { extensionPrefix } from './constants';
 
 export async function selectFolder(placeHolder: string, subpathSettingKey?: string): Promise<string> {
-    let folder: NuclioQuickPickItem<string | undefined> | undefined;
+    let folder: INuclioQuickPickItem<string | undefined> | undefined;
     if (workspace.workspaceFolders) {
-        const folderPicks: NuclioQuickPickItem<string | undefined>[] = workspace.workspaceFolders.map((f: WorkspaceFolder) => {
+        const folderPicks: INuclioQuickPickItem<string | undefined>[] = workspace.workspaceFolders.map((f: WorkspaceFolder) => {
             let subpath: string | undefined;
             if (subpathSettingKey) {
                 subpath = getFuncExtensionSetting(subpathSettingKey, f.uri.fsPath);
@@ -30,7 +30,7 @@ export async function selectFolder(placeHolder: string, subpathSettingKey?: stri
     }))[0].fsPath;
 }
 
-export interface NuclioQuickPickItem<T = undefined> extends QuickPickItem {
+export interface INuclioQuickPickItem<T = undefined> extends QuickPickItem {
     /**
      * An optional id to uniquely identify this item across sessions, used in persisting previous selections
      * If not specified, a hash of the label will be used

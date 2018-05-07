@@ -1,19 +1,16 @@
-'use strict';
-
-import * as nuclio from '../nuclio';
-import { writeFormattedJson } from '../utils';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { selectFolder, NuclioQuickPickItem } from '../folderSelector';
 import { ProjectFile } from '../config/projectFile';
 import { SettingsFile } from '../config/settingsFile';
-import { goHandlerCode, dotNetCoreHandlerCode, nodejsHandlerCode, pythonHandlerCode, javaHandlerCode } from '../constants';
+import { dotNetCoreHandlerCode, goHandlerCode, javaHandlerCode, nodejsHandlerCode, pythonHandlerCode } from '../constants';
+import { INuclioQuickPickItem, selectFolder } from '../folderSelector';
+import { FunctionConfig, LocalFunction, LocalProject } from '../nuclio';
+import { writeFormattedJson } from '../utils';
 
-const fse = require('fs-extra');
-
-export async function CreateFunction(projectConfig: nuclio.LocalProject) {
-    const functionPath = await selectFolder('Select the folder for the function');
-    const functionYamlPath = path.join(functionPath, 'function.yaml');
+export async function CreateFunction(projectConfig: LocalProject): Promise<void> {
+    const functionPath: string = await selectFolder('Select the folder for the function');
+    const functionYamlPath: string = path.join(functionPath, 'function.yaml');
 
     let functionName: string;
     let functionNamespace: string;
@@ -24,10 +21,10 @@ export async function CreateFunction(projectConfig: nuclio.LocalProject) {
         functionName = await vscode.window.showInputBox({ prompt: 'Enter the new function name' });
         functionNamespace = await vscode.window.showInputBox({ prompt: 'Enter the new function namespace' });
 
-        const picks: NuclioQuickPickItem<FunctionRuntime | string>[] = Object.keys(FunctionRuntime)
+        const picks: INuclioQuickPickItem<FunctionRuntime | string>[] = Object.keys(FunctionRuntime)
             .map((t: string) => { return { data: FunctionRuntime[t], label: t, description: '' }; });
         const options: vscode.QuickPickOptions = { placeHolder: 'Select the runtime' };
-        const runtime = await vscode.window.showQuickPick(picks, options);
+        const runtime: any  = await vscode.window.showQuickPick(picks, options);
 
         let handler: string = 'main:Handler';
         let handlerCode: string;
@@ -62,38 +59,34 @@ export async function CreateFunction(projectConfig: nuclio.LocalProject) {
                 handlerCode = javaHandlerCode;
                 handler = 'Handler';
                 break;
+            default:
+                throw new Error('Unknown runtime selected');
         }
 
         // Create .yaml file
         const yamlPath: string = path.join(functionPath, 'function.yaml');
-        let data = {
-            metadata: {
-                name: functionName,
-                namespace: functionNamespace,
-            },
-            spec: {
-                runtime: runtime.data,
-                handler: handler,
-                replicas: 1,
-                build: {}
-            }
-        };
+        const functionConfig : FunctionConfig = new FunctionConfig();
+        functionConfig.metadata.name = functionName;
+        functionConfig.metadata.namespace = functionNamespace;
+        functionConfig.spec.runtime = runtime.data;
+        functionConfig.spec.handler = handler;
+        functionConfig.spec.replicas = 1;
 
-        await writeFormattedJson(yamlPath, data);
+        await writeFormattedJson(yamlPath, functionConfig);
 
         // Create empty handler file
-        let handlerFilePath = path.join(functionPath, 'handler' + fileExtension);
+        const handlerFilePath: string = path.join(functionPath, `handler ${fileExtension}`);
         await fse.writeFile(handlerFilePath, handlerCode);
     } else {
-        let functionYaml = await fse.readJson(functionYamlPath);
-        functionName = functionYaml['metadata']['name'];
-        functionNamespace = functionYaml['metadata']['namespace'];
+        const functionYaml: FunctionConfig = await fse.readJson(functionYamlPath);
+        functionName = functionYaml.metadata.name;
+        functionNamespace = functionYaml.metadata.namespace;
     }
 
     // Update project config with function details
-    let projectFileConfig = new ProjectFile(projectConfig.path, new SettingsFile());
-    let projectData = await projectFileConfig.readFromFile();
-    projectData.functions.push(new nuclio.LocalFunction(functionName, functionNamespace, functionPath));
+    const projectFileConfig: ProjectFile = new ProjectFile(projectConfig.path, new SettingsFile());
+    const projectData: LocalProject = await projectFileConfig.readFromFile();
+    projectData.functions.push(new LocalFunction(functionName, functionNamespace, functionPath));
     projectFileConfig.writeToProjectConfigAsync(projectData);
 }
 
@@ -105,5 +98,5 @@ export enum FunctionRuntime {
     NetCore = 'dotnetcore',
     Java = 'java',
     NodeJs = 'nodejs',
-    Shell = 'shell',
+    Shell = 'shell'
 }

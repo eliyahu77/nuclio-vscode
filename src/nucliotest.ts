@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import * as nuclio from './nuclio';
+import { Dashboard, FunctionConfig, InvokeResult, ProjectConfig } from './nuclio';
 
 class Test {
 
-    static async deployFunctionAndCleanup() {
-        const dashboard = new nuclio.Dashboard('http://127.0.0.1:8070');
-        
+    static async deployFunctionAndCleanup(): Promise<void> {
+        const dashboard: Dashboard = new Dashboard('http://127.0.0.1:8070');
+
         console.log('Creating project');
 
-        const projectConfig = new nuclio.ProjectConfig();
+        const projectConfig: ProjectConfig = new ProjectConfig();
         projectConfig.metadata.name = 'ts-project';
         projectConfig.metadata.namespace = 'nuclio';
         projectConfig.spec.description = 'some description';
@@ -32,20 +32,20 @@ class Test {
         await dashboard.createProject(projectConfig);
 
         // get all projects
-        let projects = await dashboard.getProjects({namespace: projectConfig.metadata.namespace});
-        console.log('Got all projects: ' + JSON.stringify(projects));
+        let projects: ProjectConfig[] = await dashboard.getProjects({namespace: projectConfig.metadata.namespace});
+        console.log(`Got all projects: ${JSON.stringify(projects)}`);
 
         // get project by name
         projects = await dashboard.getProjects({
-            namespace: projectConfig.metadata.namespace, 
+            namespace: projectConfig.metadata.namespace,
             name: projectConfig.metadata.name
         });
 
-        console.log('Got one project: ' + JSON.stringify(projects));
-        
+        console.log(`Got one project: ${JSON.stringify(projects)}`);
+
         console.log('Creating function');
 
-        const functionConfig = new nuclio.FunctionConfig();
+        const functionConfig: FunctionConfig = new FunctionConfig();
         functionConfig.metadata.name = 'ts';
         functionConfig.metadata.namespace = 'nuclio';
         functionConfig.spec.replicas = 1;
@@ -54,39 +54,39 @@ class Test {
         functionConfig.spec.handler = 'main:Handler';
 
         // create the function. will return once the function is ready
-        const createdFunction = await dashboard.createFunction(projectConfig.metadata.name, functionConfig);
+        const createdFunction: void | FunctionConfig = await dashboard.createFunction(projectConfig.metadata.name, functionConfig);
         if (!createdFunction) {
             throw new Error('function was not created successfully');
         }
-        console.log('Deployed successfully @ ' + createdFunction.status.httpPort);
+        console.log(`Deployed successfully @ ${createdFunction.status.httpPort}`);
 
         // get all functions
-        let functionConfigs = await dashboard.getFunctions({namespace: functionConfig.metadata.namespace});
-        console.log('Got all functions:\n' + JSON.stringify(functionConfigs, null, '\t'));
+        let functionConfigs: FunctionConfig[] = await dashboard.getFunctions({namespace: functionConfig.metadata.namespace});
+        console.log(`Got all functions:\n ${JSON.stringify(functionConfigs, null, '\t')}`);
 
         // get one function
         functionConfigs = await dashboard.getFunctions({
-            namespace: functionConfig.metadata.namespace, 
-            name: functionConfig.metadata.name,
+            namespace: functionConfig.metadata.namespace,
+            name: functionConfig.metadata.name
         });
 
-        console.log('Got one function:\n' + JSON.stringify(functionConfigs, null, '\t'));
-        
+        console.log(`Got one function:\n' ${JSON.stringify(functionConfigs, null, '\t')}`);
+
         // get function by project
         functionConfigs = await dashboard.getFunctions({
-            namespace: functionConfig.metadata.namespace, 
-            projectName: projectConfig.metadata.name,
+            namespace: functionConfig.metadata.namespace,
+            projectName: projectConfig.metadata.name
         });
 
-        console.log('Got function by project:\n' + JSON.stringify(functionConfigs, null, '\t'));
+        console.log(`Got function by project:\n' ${JSON.stringify(functionConfigs, null, '\t')}`);
 
         // wait a bit - function may be ready but k8s service might not (nuclio limitation)
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve: any): number => setTimeout(resolve, 2000));
 
         // invoke the function
         try {
-            let invokeResult = await dashboard.invokeFunction(functionConfig.metadata, {method: 'get'});
-            console.log('Invoked function: ' + JSON.stringify(invokeResult));
+            const invokeResult: InvokeResult = await dashboard.invokeFunction(functionConfig.metadata, {method: 'get'});
+            console.log(`Invoked function: ${JSON.stringify(invokeResult)}`);
         } catch (e) {
             console.log('Failed to invoke function');
         }
@@ -101,7 +101,7 @@ class Test {
 
         // get all functions again
         functionConfigs = await dashboard.getFunctions({namespace: functionConfig.metadata.namespace});
-        console.log('Got all functions:\n' + JSON.stringify(functionConfigs, null, '\t'));
+        console.log(`Got all functions:\n ${JSON.stringify(functionConfigs, null, '\t')}`);
     }
 
     public static main(): number {

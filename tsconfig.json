@@ -10,10 +10,15 @@
         "sourceMap": true,
         "target": "es2016",
         "rootDir": "src",
+        "strict": true,
         "noUnusedLocals": true,
         "noImplicitThis": true,
         "noImplicitReturns": true,
-        "noUnusedParameters": true
+        "noUnusedParameters": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitAny": false,
+        "strictNullChecks": false,
+        "suppressImplicitAnyIndexErrors": true,
     },
     "include": [
         "**/*.ts"
