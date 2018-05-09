@@ -46,6 +46,7 @@ export class ProjectFile implements IProjectFile {
             settingsJsonPath,
             (data: LocalProject): {} => {
                 data.name = projectConfig.name;
+                data.namespace = projectConfig.namespace;
                 data.displayName = projectConfig.displayName;
                 data.functions = projectConfig.functions;
                 // Not sure if needed
@@ -62,8 +63,7 @@ export class ProjectFile implements IProjectFile {
 
     readFromFile(): LocalProject {
         try {
-            const projectConfigFile: LocalProject = fse.readJsonSync(this.getFilePath(), { encoding: 'utf8' });
-            return new LocalProject(projectConfigFile.name, projectConfigFile.displayName, this.folderPath, projectConfigFile.functions);
+            return fse.readJsonSync(this.getFilePath(), { encoding: 'utf8' });
         } catch (e) {
             throw new Error(`Error reading file ${this.getFilePath()}: ${e}`);
         }

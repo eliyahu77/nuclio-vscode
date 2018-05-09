@@ -6,7 +6,7 @@ export enum ContextValues {
 
 export const iconFileName: string = 'nuclioIcon.svg';
 
-export const projectNamespace: string = 'nuclio';
+export const defaultNamespace: string = 'nuclio';
 
 export const extensionPrefix: string = 'nuclio';
 

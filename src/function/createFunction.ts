@@ -6,7 +6,7 @@ import { SettingsFile } from '../config/settingsFile';
 import { dotNetCoreHandlerCode, goHandlerCode, javaHandlerCode, nodejsHandlerCode, pythonHandlerCode } from '../constants';
 import { INuclioQuickPickItem, selectFolder } from '../folderSelector';
 import { FunctionConfig, LocalFunction, LocalProject } from '../nuclio';
-import { writeFormattedJson } from '../utils';
+import { isEmptyString, writeFormattedJson } from '../utils';
 
 export async function CreateFunction(projectConfig: LocalProject): Promise<void> {
     const functionPath: string = await selectFolder('Select the folder for the function');
@@ -18,13 +18,17 @@ export async function CreateFunction(projectConfig: LocalProject): Promise<void>
     // check if function contains yaml
     if (!await fse.pathExists(functionYamlPath)) {
         // Otherwise- create it.
-        functionName = await vscode.window.showInputBox({ prompt: 'Enter the new function name' });
-        functionNamespace = await vscode.window.showInputBox({ prompt: 'Enter the new function namespace' });
+        functionName = await vscode.window.showInputBox({ prompt: 'Enter the new function name', ignoreFocusOut: true });
+        functionNamespace = await vscode.window.showInputBox({ prompt: 'Enter the new function namespace', ignoreFocusOut: true });
+
+        if (isEmptyString(functionNamespace)) {
+            functionNamespace = projectConfig.namespace;
+        }
 
         const picks: INuclioQuickPickItem<FunctionRuntime | string>[] = Object.keys(FunctionRuntime)
             .map((t: string) => { return { data: FunctionRuntime[t], label: t, description: '' }; });
         const options: vscode.QuickPickOptions = { placeHolder: 'Select the runtime' };
-        const runtime: any  = await vscode.window.showQuickPick(picks, options);
+        const runtime: any = await vscode.window.showQuickPick(picks, options);
 
         let handler: string = 'main:Handler';
         let handlerCode: string;
@@ -65,7 +69,7 @@ export async function CreateFunction(projectConfig: LocalProject): Promise<void>
 
         // Create .yaml file
         const yamlPath: string = path.join(functionPath, 'function.yaml');
-        const functionConfig : FunctionConfig = new FunctionConfig();
+        const functionConfig: FunctionConfig = new FunctionConfig();
         functionConfig.metadata.name = functionName;
         functionConfig.metadata.namespace = functionNamespace;
         functionConfig.spec.runtime = runtime.data;

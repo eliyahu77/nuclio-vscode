@@ -31,8 +31,9 @@ suite('ProjectFile Tests', function (): void {
 
         const projectFile: ProjectFile = new ProjectFile(folderPath, settingsFile);
         const name: string = 'newproj';
+        const namespace: string = 'nuclio';
         const displayName: string = 'new proj';
-        const projectConfig: LocalProject = new LocalProject(name, displayName, folderPath, []);
+        const projectConfig: LocalProject = new LocalProject(name, namespace, displayName, folderPath, []);
 
         await projectFile.writeToProjectConfigAsync(projectConfig);
 
@@ -42,7 +43,6 @@ suite('ProjectFile Tests', function (): void {
 
         // Add new function to project
         const funcName: string = 'My func';
-        const namespace: string = 'nuclio';
         const funcPath: string = path.join(folderPath, 'newfunc');
 
         // update file

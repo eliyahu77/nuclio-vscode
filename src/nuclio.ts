@@ -58,7 +58,7 @@ export class LocalEnvironment {
 }
 
 export class LocalProject {
-    constructor(public name: string, public displayName: string, public path: string, public functions: LocalFunction[]) {
+    constructor(public name: string, public namespace: string, public displayName: string, public path: string, public functions: LocalFunction[]) {
     }
 }
 

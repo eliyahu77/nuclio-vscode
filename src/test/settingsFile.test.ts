@@ -44,7 +44,7 @@ suite('SettingsFile Tests', function (): void {
         const projectName: string = 'newproj';
         const displayName: string = 'new proj';
         const projectFolderPath: string = 'C:\\projectFolder';
-        const projectConfig: LocalProject = new LocalProject(projectName, displayName, projectFolderPath, []);
+        const projectConfig: LocalProject = new LocalProject(projectName, namespace, displayName, projectFolderPath, []);
         localEnvironment.projects.push({ name: projectConfig.name, path: projectConfig.path });
 
         await settingsFile.updateSettingsFileAsync(projectConfig, name);

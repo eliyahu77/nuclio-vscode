@@ -46,3 +46,7 @@ export async function confirmOverwriteFile(fsPath: string): Promise<boolean> {
 export function isEmpty(obj: any) : boolean {
     return typeof obj === 'undefined' || obj === null || Object.keys(obj).length === 0;
 }
+
+export function isEmptyString(str: string): boolean {
+    return !str || str === undefined || str.trim().length === 0;
+}

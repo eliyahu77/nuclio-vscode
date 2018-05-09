@@ -29,6 +29,10 @@
                 "title": "Invoke function"
             },
             {
+                "command": "nuclioTreeProvider.openFunctionInEditor",
+                "title": "Open in editor"
+            },
+            {
                 "command": "nuclioTreeProvider.deleteFunction",
                 "title": "Delete function"
             },
@@ -76,14 +80,19 @@
             ],
             "view/item/context": [
                 {
-                    "command": "nuclioTreeProvider.deployFunction",
+                    "command": "nuclioTreeProvider.openFunctionInEditor",
                     "when": "view == nuclioTreeProvider && viewItem == function",
                     "group": "1@1"
                 },
                 {
+                    "command": "nuclioTreeProvider.deployFunction",
+                    "when": "view == nuclioTreeProvider && viewItem == function",
+                    "group": "1@2"
+                },
+                {
                     "command": "nuclioTreeProvider.invokeFunction",
                     "when": "view == nuclioTreeProvider && viewItem == function",
-                    "group": "1@1"
+                    "group": "1@3"
                 },
                 {
                     "command": "nuclioTreeProvider.deleteFunction",
