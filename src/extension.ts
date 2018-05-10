@@ -2,6 +2,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { SettingsFile } from './config/settingsFile';
 import { createEnvironment } from './environment/createEnvironment';
 import { EnvironmentTreeItem } from './extension-tree/EnvironmentTreeItem';
 import { FunctionTreeItem } from './extension-tree/FunctionTreeItem';
@@ -39,7 +40,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     });
 
     vscode.commands.registerCommand('nuclioTreeProvider.createProject', async (environment: EnvironmentTreeItem) => {
-        await CreateProject(environment.environmentConfig);
+        await CreateProject(environment.environmentConfig, new SettingsFile());
         nuclioTreeProvider.refresh();
     });
 
@@ -49,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     });
 
     vscode.commands.registerCommand('nuclioTreeProvider.createEnvironment', async () => {
-        await createEnvironment();
+        await createEnvironment(new SettingsFile());
         nuclioTreeProvider.refresh();
     });
 

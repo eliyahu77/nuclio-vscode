@@ -15,8 +15,9 @@ export async function CreateFunction(projectConfig: LocalProject): Promise<void>
     let functionName: string;
     let functionNamespace: string;
 
+    const isPathExists: boolean = await fse.pathExists(functionYamlPath);
     // check if function contains yaml
-    if (!await fse.pathExists(functionYamlPath)) {
+    if (!isPathExists) {
         // Otherwise- create it.
         functionName = await vscode.window.showInputBox({ prompt: 'Enter the new function name', ignoreFocusOut: true });
         functionNamespace = await vscode.window.showInputBox({ prompt: 'Enter the new function namespace', ignoreFocusOut: true });
@@ -79,7 +80,7 @@ export async function CreateFunction(projectConfig: LocalProject): Promise<void>
         await writeFormattedJson(yamlPath, functionConfig);
 
         // Create empty handler file
-        const handlerFilePath: string = path.join(functionPath, `handler ${fileExtension}`);
+        const handlerFilePath: string = path.join(functionPath, `handler${fileExtension}`);
         await fse.writeFile(handlerFilePath, handlerCode);
     } else {
         const functionYaml: FunctionConfig = await fse.readJson(functionYamlPath);
@@ -91,7 +92,7 @@ export async function CreateFunction(projectConfig: LocalProject): Promise<void>
     const projectFileConfig: ProjectFile = new ProjectFile(projectConfig.path, new SettingsFile());
     const projectData: LocalProject = await projectFileConfig.readFromFile();
     projectData.functions.push(new LocalFunction(functionName, functionNamespace, functionPath));
-    projectFileConfig.writeToProjectConfigAsync(projectData);
+    await projectFileConfig.writeToProjectConfigAsync(projectData);
 }
 
 export enum FunctionRuntime {

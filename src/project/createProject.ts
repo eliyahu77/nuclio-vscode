@@ -2,12 +2,12 @@
 
 import * as vscode from 'vscode';
 import { ProjectFile } from '../config/projectFile';
-import { SettingsFile } from '../config/settingsFile';
+import { ISettingsFile } from '../config/settingsFile';
 import { selectFolder } from '../folderSelector';
 import { Dashboard, LocalEnvironment, LocalProject, ProjectConfig } from '../nuclio';
 import { isEmptyString } from '../utils';
 
-export async function CreateProject(environmentConfig: LocalEnvironment): Promise<void> {
+export async function CreateProject(environmentConfig: LocalEnvironment, settingsFile: ISettingsFile): Promise<void> {
     const dashboard: Dashboard = new Dashboard(environmentConfig.address);
 
     const displayName: string = await vscode.window.showInputBox({ prompt: 'Enter the project\'s name', ignoreFocusOut: true });
@@ -24,14 +24,12 @@ export async function CreateProject(environmentConfig: LocalEnvironment): Promis
     projectConfig.spec.description = description;
     projectConfig.spec.displayName = displayName;
 
-    const settingsFile: SettingsFile = new SettingsFile();
     const projectFileConfig: ProjectFile = new ProjectFile(filePath, settingsFile);
 
     // Create the project in nuclio
     projectConfig = await dashboard.createProject(projectConfig);
 
     vscode.window.showInformationMessage('Project created successfully');
-
     const projectInEnvironment: LocalProject = new LocalProject(projectConfig.metadata.name, namespace, displayName, filePath, []);
     await projectFileConfig.writeToProjectConfigAsync(projectInEnvironment);
 

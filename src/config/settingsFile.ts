@@ -86,7 +86,9 @@ export class SettingsFile implements ISettingsFile {
     // Reads the configuration from nuclio.json file
     public async readFromFileAsync(): Promise<EnvironmentsConfig> {
         const environmentConfigPath: string = this.getFilePath();
-        if (await fse.pathExists(this.getFilePath())) {
+        const pathExists: boolean = await fse.pathExists(this.getFilePath());
+
+        if (pathExists) {
             return await fse.readJson(environmentConfigPath);
         }
 

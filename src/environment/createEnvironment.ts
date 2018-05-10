@@ -1,12 +1,10 @@
 import * as vscode from 'vscode';
-import { SettingsFile } from '../config/settingsFile';
+import { ISettingsFile } from '../config/settingsFile';
 import { defaultNamespace } from '../constants';
 import { LocalEnvironment } from '../nuclio';
 import { isEmptyString } from '../utils';
 
-export async function createEnvironment(): Promise<void> {
-    const settingsFile: SettingsFile = new SettingsFile();
-
+export async function createEnvironment(settingsFile: ISettingsFile): Promise<void> {
     // Get environment details
     const name: string = await vscode.window.showInputBox({
         prompt: 'Enter the new environment name',
@@ -31,5 +29,5 @@ export async function createEnvironment(): Promise<void> {
 
     const newEnv: LocalEnvironment = new LocalEnvironment(name, namespace, address, []);
 
-    settingsFile.addNewEnvironmentAsync(newEnv);
+    await settingsFile.addNewEnvironmentAsync(newEnv);
 }

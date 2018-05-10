@@ -5,25 +5,20 @@
 
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
-import * as fse from 'fs-extra';
-import * as path from 'path';
+import * as tmp from 'tmp';
 import { SettingsFile } from '../config/settingsFile';
 import { EnvironmentsConfig, LocalEnvironment, LocalProject } from '../nuclio';
 
 suite('SettingsFile Tests', function (): void {
-    const folderPath: string = 'C:\\temp2';
-
     test('Default folder path is set correctly', function (): void {
-        testCleanup();
         const settingsFile: SettingsFile = new SettingsFile();
 
         assert.equal(settingsFile.getUserHome(), settingsFile.homeDir);
     });
 
     test('Settings config is correctly generated and updated', async function (): Promise<void> {
-        testCleanup();
-
-        const settingsFile: SettingsFile = new SettingsFile(folderPath);
+        const folderPath: tmp.SynchrounousResult = tmp.dirSync({unsafeCleanup: true});
+        const settingsFile: SettingsFile = new SettingsFile(folderPath.name);
 
         const name: string = 'env';
         const namespace: string = 'nuclio';
@@ -54,8 +49,4 @@ suite('SettingsFile Tests', function (): void {
 
         assert.deepEqual(storedEnv, localEnvironment);
     });
-
-    function testCleanup(): void {
-        fse.removeSync(path.join(folderPath, '.nuclio-vscode'));
-    }
 });
